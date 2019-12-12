@@ -12,6 +12,7 @@ https://github.com/eldar/pose-tensorflow
 
 """
 import logging, os
+import datetime
 import threading
 import argparse
 from pathlib import Path
@@ -184,6 +185,7 @@ def train(config_yaml,displayiters,saveiters,maxiters,max_to_keep=5,keepdeconvwe
     print("Training parameter:")
     print(cfg)
     print("Starting training....")
+    time_start = datetime.datetime.now()
     for it in range(max_iter+1):
         current_lr = lr_gen.get_lr(it)
         [_, loss_val, summary] = sess.run([train_op, total_loss, merged_summaries],
@@ -194,8 +196,13 @@ def train(config_yaml,displayiters,saveiters,maxiters,max_to_keep=5,keepdeconvwe
         if it % display_iters == 0 and it>0:
             average_loss = cum_loss / display_iters
             cum_loss = 0.0
-            logging.info("iteration: {} loss: {} lr: {}"
-                         .format(it, "{0:.4f}".format(average_loss), current_lr))
+
+            time_now = datetime.datetime.now()
+            time_passed = time_now - time_start
+            time_left = time_passed / (it+1) * (max_iter-it-1)
+
+            logging.info("iteration: {} loss: {:.4f} lr: {} time: {} time_passed: {} time_to_max_iter: {}"
+                         .format(it, average_loss, current_lr, time_now, time_passed, time_left))
             lrf.write("{}, {:.5f}, {}\n".format(it, average_loss, current_lr))
             lrf.flush()
 
@@ -203,6 +210,7 @@ def train(config_yaml,displayiters,saveiters,maxiters,max_to_keep=5,keepdeconvwe
         if (it % save_iters == 0 and it != 0) or it == max_iter:
             model_name = cfg.snapshot_prefix
             saver.save(sess, model_name, global_step=it)
+            print('Saved data.')
 
     lrf.close()
     sess.close()
