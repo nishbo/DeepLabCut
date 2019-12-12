@@ -129,7 +129,7 @@ def train_network(config,shuffle=1,trainingsetindex=0,
         os.environ['CUDA_VISIBLE_DEVICES'] = str(gputouse)
 
       try:
-          train(str(poseconfigfile),displayiters,saveiters,maxiters,max_to_keep=max_snapshots_to_keep,keepdeconvweights=keepdeconvweights,allow_growth=allow_growth) #pass on path and file name for pose_cfg.yaml!
+          train(str(poseconfigfile), displayiters, saveiters, maxiters, max_to_keep=max_snapshots_to_keep, keepdeconvweights=keepdeconvweights, allow_growth=allow_growth) #pass on path and file name for pose_cfg.yaml!
       except BaseException as e:
           raise e
       finally:

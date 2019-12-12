@@ -140,19 +140,24 @@ def train(config_yaml,displayiters,saveiters,maxiters,max_to_keep=5,keepdeconvwe
     restorer = TF.train.Saver(variables_to_restore)
     saver = TF.train.Saver(max_to_keep=max_to_keep) # selects how many snapshots are stored, see https://github.com/AlexEMG/DeepLabCut/issues/8#issuecomment-387404835
 
+
     if allow_growth==True:
         config = tf.ConfigProto()
         config.gpu_options.allow_growth = True
         sess = TF.Session(config=config)
     else:
-        sess = TF.Session()
+        config = tf.ConfigProto()
+        config.gpu_options.per_process_gpu_memory_fraction = 0.9
+        sess = TF.Session(config=config)
+
+    run_opts = tf.RunOptions(report_tensor_allocations_upon_oom=True)
 
     coord, thread = start_preloading(sess, enqueue_op, dataset, placeholders)
     train_writer = TF.summary.FileWriter(cfg.log_dir, sess.graph)
     learning_rate, train_op = get_optimizer(total_loss, cfg)
 
-    sess.run(TF.global_variables_initializer())
-    sess.run(TF.local_variables_initializer())
+    sess.run(TF.global_variables_initializer(), options=run_opts)
+    sess.run(TF.local_variables_initializer(), options=run_opts)
 
     # Restore variables from disk.
     restorer.restore(sess, cfg.init_weights)
@@ -189,7 +194,7 @@ def train(config_yaml,displayiters,saveiters,maxiters,max_to_keep=5,keepdeconvwe
     for it in range(max_iter+1):
         current_lr = lr_gen.get_lr(it)
         [_, loss_val, summary] = sess.run([train_op, total_loss, merged_summaries],
-                                          feed_dict={learning_rate: current_lr})
+                                          feed_dict={learning_rate: current_lr}, options=run_opts)
         cum_loss += loss_val
         train_writer.add_summary(summary, it)
 

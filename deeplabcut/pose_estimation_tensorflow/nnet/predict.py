@@ -34,7 +34,9 @@ def setup_pose_prediction(cfg):
         outputs.append(net_heads['locref'])
 
     restorer = TF.train.Saver()
-    sess = TF.Session()
+    config = tf.ConfigProto()
+    config.gpu_options.per_process_gpu_memory_fraction = 0.9
+    sess = TF.Session(config=config)
     sess.run(TF.global_variables_initializer())
     sess.run(TF.local_variables_initializer())
 
@@ -189,7 +191,9 @@ def setup_GPUpose_prediction(cfg):
     outputs = [net_heads['pose']]
 
     restorer = tf.train.Saver()
-    sess = tf.Session()
+    config = tf.ConfigProto()
+    config.gpu_options.per_process_gpu_memory_fraction = 0.9
+    sess = tf.Session(config=config)
 
     sess.run(tf.global_variables_initializer())
     sess.run(tf.local_variables_initializer())
